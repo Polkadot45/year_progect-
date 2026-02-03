@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class MyImage {
     private final Map<String, BufferedImage> images = new HashMap<>();
 
@@ -33,10 +34,11 @@ public class MyImage {
         loadImage("larusaS", "resources/larusaS.png");
         loadImage("paratov", "resources/paratov.png");
         loadImage("mama", "resources/mama.png");
+        loadImage("gavrilo","resources/gavrilo.png");
 
         // Реплики
-        loadImage("r1_1", "resources/r1_1.png");
-        loadImage("r1_2", "resources/r1_2.png");
+        loadImage("replica_s", "resources/replica_s.png");
+        loadImage("replica_d", "resources/replica_d.png");
     }
 
     private void loadImage(String key, String path) throws IOException {
