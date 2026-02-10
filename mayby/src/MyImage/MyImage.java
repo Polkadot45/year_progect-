@@ -29,16 +29,20 @@ public class MyImage {
         loadImage("dot", "resources/dot.png");
 
         // Персонажи
+        loadImage("knurov","resources/knurov.png");
         loadImage("serega","resources/serega.png");
         loadImage("ivan", "resources/ivan.png");
         loadImage("larusaS", "resources/larusaS.png");
         loadImage("paratov", "resources/paratov.png");
         loadImage("mama", "resources/mama.png");
         loadImage("gavrilo","resources/gavrilo.png");
+        loadImage("karandashev","resources/karandashev.png");
 
         // Реплики
         loadImage("replica_s", "resources/replica_s.png");
         loadImage("replica_d", "resources/replica_d.png");
+        loadImage("chois1", "resources/сhois1.png");
+        loadImage("chois2", "resources/сhois2.png");
     }
 
     private void loadImage(String key, String path) throws IOException {

@@ -27,16 +27,19 @@ public class Size {
         buttons.put("dot", new Game.Rect("dot", 605, 360, 23, 23));
 
         // Персонажи
-        characters.put("serega", new Game.Rect("serega", 60, 300, 740, 740));
+        characters.put("serega", new Game.Rect("serega", -100, 240, 860, 860));
+        characters.put("knurov", new Game.Rect("knurov", 1050, 200, 900, 900));
         characters.put("ivan", new Game.Rect("ivan", -100, 240, 860, 860));
-        characters.put("larusa", new Game.Rect("larusaS", 1100, 355, 710, 710));
+        characters.put("larusaS", new Game.Rect("larusaS", 1050, 200, 850, 850));
         characters.put("paratov", new Game.Rect("paratov", 150, 340, 750, 750));
-        characters.put("mama", new Game.Rect("mama", 150, 370, 710, 710));
+        characters.put("mama", new Game.Rect("mama", -100, 240, 860, 860));
         characters.put("gavrilo", new Game.Rect("gavrilo", 1000, 200, 900, 900));
-
+        characters.put("karandashev", new Game.Rect("karandashev", -100, 240, 870, 870));
 
         // Реплики
         replicas.put("replica_s", new Game.Rect("replica_s", 270, 270, 1400, 550));
         replicas.put("replica_d", new Game.Rect("replica_d", 220, 615, 1400, 550));
+        replicas.put("chois1", new Game.Rect("chois1", 220, 800, 600, 200));
+        replicas.put("chois2", new Game.Rect("chois2", 900, 800, 600, 200));
     }
 }
