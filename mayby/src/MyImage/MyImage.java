@@ -27,6 +27,7 @@ public class MyImage {
         loadImage("seti", "resources/seti.jpg");
         loadImage("cafe", "resources/cafe.jpg");
         loadImage("dot", "resources/dot.png");
+        loadImage("room", "resources/room.jpg");
 
         // Персонажи
         loadImage("knurov","resources/knurov.png");

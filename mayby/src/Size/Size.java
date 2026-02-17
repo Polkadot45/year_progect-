@@ -15,6 +15,7 @@ public class Size {
         backgrounds.put("people", new Game.Rect("people", 0, 0, 1920, 1080));
         backgrounds.put("seti", new Game.Rect("seti", 0, 0, 1920, 1080));
         backgrounds.put("cafe", new Game.Rect("cafe", 0, 0, 1920, 1080));
+        backgrounds.put("room", new Game.Rect("room", 0, 0, 1920, 1080));
 
         // Кнопки
         buttons.put("start", new Game.Rect("start", 815, 652, 245, 205));
@@ -31,7 +32,7 @@ public class Size {
         characters.put("knurov", new Game.Rect("knurov", 1050, 200, 900, 900));
         characters.put("ivan", new Game.Rect("ivan", -100, 240, 860, 860));
         characters.put("larusaS", new Game.Rect("larusaS", 1050, 200, 850, 850));
-        characters.put("paratov", new Game.Rect("paratov", 150, 340, 750, 750));
+        characters.put("paratov", new Game.Rect("paratov", -100, 240, 860, 860));
         characters.put("mama", new Game.Rect("mama", -100, 240, 860, 860));
         characters.put("gavrilo", new Game.Rect("gavrilo", 1000, 200, 900, 900));
         characters.put("karandashev", new Game.Rect("karandashev", -100, 240, 870, 870));

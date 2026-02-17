@@ -47,13 +47,15 @@ public class Game extends JFrame {
 
     enum Scene {
         MENU, SETTINGS, INTRO,
-        CAFE_DIALOG
+        CAFE_DIALOG,
     }
 
     private final Map<String, Rect> buttons = new HashMap<>();
     private final Map<String, Rect> backgrounds = new HashMap<>();
     private final Map<String, Rect> characters = new HashMap<>();
     private final Map<String, Rect> replicas = new HashMap<>();
+    private final TreeMap<Integer, String> backgroundChanges = new TreeMap<>();  // Хранит: индекс реплики → ключ фона (TreeMap позволяет искать "последний ключ <= текущего")
+
 
     private Scene currentScene = Scene.MENU;
     private final MyImage imageManager = new MyImage();
@@ -186,12 +188,10 @@ public class Game extends JFrame {
                     }
                 }
                 break;
+
         }
     }
 
-    private boolean isCafeScene(Scene scene) {
-        return scene == Scene.CAFE_DIALOG;
-    }
 
     private boolean isInside(int mx, int my, Rect r) {
         return r != null && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
@@ -206,6 +206,7 @@ public class Game extends JFrame {
             BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8")); //быстрее читает;из байтов в символы
             String line; //хранения текущей строки файла
             currentReplicas.clear();
+            backgroundChanges.clear(); // очищаем старые события смены фона
             currentScenarioFile = filename;
 
             while ((line = br.readLine()) != null) { //сохранение строк,читая их до \n
@@ -253,11 +254,19 @@ public class Game extends JFrame {
                         continue;
                     }
                 }
+
+                if (line.startsWith("#bg:")) {
+                    String bgKey = line.substring(4).trim();
+                    backgroundChanges.put(currentReplicas.size(), bgKey); // Сохраняем смену фона для текущего индекса реплики
+
+                    continue;
+                }
                 System.err.println("Пропущена строка: " + line);
             }
             currentReplicaIndex = 0;
             inChoiceMode = false;
             choiceReplica = null;
+            currentScenarioFile = filename;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -303,17 +312,6 @@ public class Game extends JFrame {
         }
 
         g2d.dispose(); //отчистка
-    }
-
-    private int getReplicaMaxWidth() {
-        Rect replicaS = replicas.get("replica_s");
-        Rect replicaD = replicas.get("replica_d");
-        int width = 600;
-
-        if (replicaS != null) width = Math.max(width, replicaS.w - 150);
-        if (replicaD != null) width = Math.max(width, replicaD.w - 150);
-
-        return width;
     }
 
     private List<String> wrapText(String text, FontMetrics fm, int maxWidth) {
@@ -383,19 +381,6 @@ public class Game extends JFrame {
             g2d.drawString(line, x + leftPadding, currentY);
             currentY += lineHeight;
         }
-
-//        FontMetrics fm = g2d.getFontMetrics();
-//        int maxWidth = 440;
-//        int lineHeight = fm.getHeight();
-//        int leftPadding = 25;
-//
-//        List<String> lines = wrapText(text, fm, maxWidth); //разбитие по длине
-//        int currentY = y+15 ;//начало отрисовки
-//
-//        for (String line : lines) {
-//            g2d.drawString(line, x + leftPadding, currentY);
-//            currentY += lineHeight;
-//        }
 
         g2d.dispose();
     }
@@ -483,9 +468,12 @@ public class Game extends JFrame {
                     drawImage("stop", buttons.get("back"), g);
                     drawImage("next", buttons.get("next"), g);
                     break;
+
+
             }
 
-            if (isCafeScene(currentScene) && !currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
+
+            if ( !currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
                 Replica current = currentReplicas.get(currentReplicaIndex);
                 if (!current.isChoicePoint) {
                     drawReplica(g, current);
@@ -493,11 +481,28 @@ public class Game extends JFrame {
             }
         }
 
-        private void drawBackground(String key, Graphics g) {
-            Rect bg = backgrounds.get(key);
+        private void drawBackground(String defaultKey, Graphics g) {
+            String bgKey = defaultKey;
+
+            if (!backgroundChanges.isEmpty() && currentReplicaIndex >= 0) {   // Если есть события смены фона И текущий индекс не первый
+
+                Integer lastChangeIndex = backgroundChanges.floorKey(currentReplicaIndex); // Находим последний индекс смены фона, который <= текущего
+                if (lastChangeIndex != null) {
+                    String newBg = backgroundChanges.get(lastChangeIndex);
+                    if (backgrounds.containsKey(newBg)) {   // Применяем, только если такой фон существует в ресурсах
+
+                        bgKey = newBg;
+                    }
+                }
+            }
+
+            Rect bg = backgrounds.get(bgKey);
             if (bg == null) return;
+
             BufferedImage img = imageManager.getImage(bg.imgKey);
-            g.drawImage(img, bg.x, bg.y, getWidth(), getHeight(), null);
+            if (img != null) {
+                g.drawImage(img, bg.x, bg.y, getWidth(), getHeight(), null);
+            }
         }
 
         private void drawImage(String imgKey, Rect r, Graphics g) {
