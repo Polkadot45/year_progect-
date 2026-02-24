@@ -183,6 +183,8 @@ public class Game extends JFrame {
                         if (currentReplicaIndex < currentReplicas.size() - 1) {
                             currentReplicaIndex++;
                         } else {
+                            currentReplicas.clear();
+                            currentReplicaIndex = 0;
                             currentScene = Scene.MENU;
                         }
                     }
@@ -485,12 +487,10 @@ public class Game extends JFrame {
             String bgKey = defaultKey;
 
             if (!backgroundChanges.isEmpty() && currentReplicaIndex >= 0) {   // Если есть события смены фона И текущий индекс не первый
-
                 Integer lastChangeIndex = backgroundChanges.floorKey(currentReplicaIndex); // Находим последний индекс смены фона, который <= текущего
                 if (lastChangeIndex != null) {
                     String newBg = backgroundChanges.get(lastChangeIndex);
                     if (backgrounds.containsKey(newBg)) {   // Применяем, только если такой фон существует в ресурсах
-
                         bgKey = newBg;
                     }
                 }

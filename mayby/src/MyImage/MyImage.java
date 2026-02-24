@@ -28,6 +28,7 @@ public class MyImage {
         loadImage("cafe", "resources/cafe.jpg");
         loadImage("dot", "resources/dot.png");
         loadImage("room", "resources/room.jpg");
+        loadImage("contry", "resources/contry.jpg");
 
         // Персонажи
         loadImage("knurov","resources/knurov.png");
@@ -38,6 +39,7 @@ public class MyImage {
         loadImage("mama", "resources/mama.png");
         loadImage("gavrilo","resources/gavrilo.png");
         loadImage("karandashev","resources/karandashev.png");
+        loadImage("robinzon","resources/robinzon.png");
 
         // Реплики
         loadImage("replica_s", "resources/replica_s.png");
