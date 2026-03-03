@@ -3,6 +3,8 @@ import Size.Size;
 import MyImage.MyImage;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import javax.swing.Timer;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -10,6 +12,8 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.awt.geom.AffineTransform;
+
 
 public class Game extends JFrame {
 
@@ -26,6 +30,45 @@ public class Game extends JFrame {
         }
 
         Size.initSize(backgrounds, buttons, characters, replicas);
+
+        scenarioAllowedObjects.put("1_1.txt", Arrays.asList("bird"));
+        scenarioAllowedObjects.put("1_2.txt", Arrays.asList("bird"));
+        scenarioAllowedObjects.put("1_3.txt", Arrays.asList("bird"));
+        scenarioAllowedObjects.put("1_03.txt", Arrays.asList("cat"));
+        scenarioAllowedObjects.put("1_4.txt", Arrays.asList("cat"));
+        scenarioAllowedObjects.put("1_5.txt", Arrays.asList("cat"));
+
+        animationTimer = new Timer(33, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!animationsEnabled || currentScene != Scene.STORY || currentScenarioFile == null) return;
+
+                animatedObjects.removeIf(obj -> !obj.update());
+
+                double spawnChance = 0.0; // по умолчанию — никакой спавн
+
+                if ("1_1.txt".equals(currentScenarioFile) || "1_2.txt".equals(currentScenarioFile)||"1_3.txt".equals(currentScenarioFile)) {
+                    spawnChance = 0.007;
+                }
+                else {
+                    spawnChance = 0.002;
+                }
+
+                if (Math.random() < spawnChance) {
+                    if(animatedObjects.size()<2 && ("1_1.txt".equals(currentScenarioFile)||"1_2.txt".equals(currentScenarioFile)||"1_3.txt".equals(currentScenarioFile) ))
+                        spawnRandomObject();
+                    else if(animatedObjects.isEmpty())
+                        spawnRandomObject();
+                }
+
+                if (getComponentCount() > 0 && getComponent(0) instanceof GamePanel) {
+                    ((GamePanel)getComponent(0)).repaint();
+                }
+            }
+        });
+        animationTimer.start();
+        System.out.println("✅ Таймер анимаций: птица(1_1.txt)=0.4%, кошка(3_1.txt)=0.08%");
+
 
         setTitle("Бесприданница");
         setSize(1920, 1080);
@@ -47,8 +90,11 @@ public class Game extends JFrame {
 
     enum Scene {
         MENU, SETTINGS, INTRO,
-        CAFE_DIALOG,
+        STORY,
     }
+
+    // музыка,настройки,заменить грустную ларису на веселую,робинзон в конце поменять
+
 
     private final Map<String, Rect> buttons = new HashMap<>();
     private final Map<String, Rect> backgrounds = new HashMap<>();
@@ -64,7 +110,12 @@ public class Game extends JFrame {
     private int currentReplicaIndex = 0;
     private String currentScenarioFile = null; //запоминает имя файла текущего сценария для возврата после ветвления.
     private boolean inChoiceMode = false; // обычный диалог/отрисовка разветвления
-    private Replica choiceReplica = null; //сохраняет реплику, после которой появляется точка выбора
+    private Replica choiceReplica = null;//сохраняет реплику, после которой появляется точка выбора
+
+    private List<AnimatedObject> animatedObjects = new ArrayList<>();
+    private Timer animationTimer;
+    private boolean animationsEnabled = true;
+    private final Map<String, List<String>> scenarioAllowedObjects = new HashMap<>();;
 
     public static class Rect {
         int x, y, w, h;
@@ -110,6 +161,153 @@ public class Game extends JFrame {
             this.choiceFile2 = file2;
         }
     }
+
+    public static class AnimatedObject {
+        String type;
+        int startX, startY, endX, endY;
+        int arcHeight; // высота дуги над прямой линией
+        long startTime, duration;
+        boolean active;
+        int currentX, currentY;
+        int frame;
+
+        public AnimatedObject(String type, int startX, int startY, int endX, int endY, int arcHeight, long duration) {
+            this.type = type;
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+            this.arcHeight = arcHeight;
+            this.duration = duration;
+            this.startTime = System.currentTimeMillis();
+            this.active = true;
+            this.frame = 0;
+            updatePosition(0); // инициализация стартовой позиции
+        }
+
+        // Обновляет позицию по параболической траектории
+        public boolean update() {
+            long elapsed = System.currentTimeMillis() - startTime;
+            if (elapsed >= duration) {
+                active = false;
+                return false;
+            }
+
+            double t = (double) elapsed / duration;
+            updatePosition(t);
+
+            // Чередование 2 кадров каждые 150мс
+            frame = (int)((elapsed / 150) % 2);
+
+            return true;
+        }
+
+        // Расчёт позиции по параболической дуге
+        private void updatePosition(double t) {
+            currentX = (int)(startX + (endX - startX) * t); // Линейное движение по X
+
+            double linearY = startY + (endY - startY) * t;  // Параболическое движение по Y (дуга вверх)
+            double arcOffset = arcHeight * Math.sin(Math.PI * t); // Формула: y = линейная_позиция - высота_дуги * sin(π * t)
+            currentY = (int)(linearY - arcOffset);
+        }
+    }
+
+    private void spawnRandomObject() {
+        if (currentScenarioFile == null || !scenarioAllowedObjects.containsKey(currentScenarioFile)) return;
+        List<String> types = scenarioAllowedObjects.get(currentScenarioFile);
+        if (types.isEmpty()) return;
+        String type = types.get((int)(Math.random() * types.size()));
+        AnimatedObject obj = createRandomObject(type);
+        if (obj != null) animatedObjects.add(obj);
+    }
+
+    private AnimatedObject createRandomObject(String type) {
+
+        if ("bird".equals(type)) {
+            int startX = 2000;
+            int startY = 400;
+            int endX = 400;
+            int endY = -40;
+            int arcHeight = 100;
+            long duration = 4000;//длительность полета
+
+
+            AnimatedObject bird = new AnimatedObject("bird", startX, startY, endX, endY, arcHeight, duration);
+            System.out.println("Птица запущена");
+            return bird;
+        }
+        else if("cat".equals(type)) {
+            int startY = 900;
+            int startX = 1280;
+            int endX = 630;
+            int endY = 650;
+            int arcHeight = 50;
+            long duration = 6000;
+
+            System.out.println("🐾 Кошка запущена: (" + startX + "," + startY + ") → (" + endX + "," + endY + ")");
+            return new AnimatedObject("cat", startX, startY, endX, endY, arcHeight, duration);
+        }
+        return null;
+    }
+
+    private void drawAnimatedObjects(Graphics g) {
+        if (!animationsEnabled || animatedObjects.isEmpty()) return;
+
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        for (AnimatedObject obj : animatedObjects) {
+            if (!obj.active) continue;
+
+            String key = obj.type + "_" + obj.frame;
+            BufferedImage img = imageManager.getImage(key);
+
+            int width = 0;
+            int height=0;
+
+            if ("cat".equals(obj.type)) {
+                width = 150;
+                height = (int)(width * ((double)img.getHeight() / img.getWidth()));
+                g2d.drawImage(img, obj.currentX - width/2, obj.currentY - height/2, width, height, null);
+            } else {
+                width = 100;
+                height = (int)(width * ((double)img.getHeight() / img.getWidth()));
+                g2d.drawImage(img, obj.currentX - width/2, obj.currentY - height/2, width, height, null);
+            }
+        }
+        g2d.dispose();
+    }
+
+//    private void drawTrajectoryDebug(Graphics g) {
+//        if (!animationsEnabled) return;
+//
+//        Graphics2D g2d = (Graphics2D) g.create();
+//        g2d.setColor(new Color(255, 0, 0, 100)); // полупрозрачный красный
+//        g2d.setStroke(new BasicStroke(2));
+//
+//        int startX = 1280, startY = 900;
+//        int endX = 630, endY = 650;
+//        int arcHeight = 50;
+//
+//        // Рисуем 20 точек траектории
+//        for (int i = 0; i <= 20; i++) {
+//            double t = i / 20.0;
+//            int x = (int)(startX + (endX - startX) * t);
+//            double linearY = startY + (endY - startY) * t;
+//            double arcOffset = arcHeight * Math.sin(Math.PI * t);
+//            int y = (int)(linearY - arcOffset);
+//
+//            g2d.fillOval(x - 3, y - 3, 6, 6);
+//        }
+//
+//        // Старт и финиш
+//        g2d.setColor(Color.GREEN);
+//        g2d.fillOval(startX - 5, startY - 5, 10, 10);
+//        g2d.setColor(Color.BLUE);
+//        g2d.fillOval(endX - 5, endY - 5, 10, 10);
+//
+//        g2d.dispose();
+//    }
 
     private void handleMouseClick(MouseEvent e) {
         int x = e.getX(), y = e.getY();
@@ -163,13 +361,13 @@ public class Game extends JFrame {
 
             case INTRO:
                 if (isInside(x, y, buttons.get("next"))) {
-                    currentScene = Scene.CAFE_DIALOG;
+                    currentScene = Scene.STORY;
                     loadScenario("1_1.txt");
                     currentReplicaIndex = 0;
                 }
                 break;
 
-            case CAFE_DIALOG:
+            case STORY:
                 if (isInside(x, y, buttons.get("next"))) {
                     if (!currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
                         Replica current = currentReplicas.get(currentReplicaIndex);
@@ -411,8 +609,10 @@ public class Game extends JFrame {
                     drawImage("next", buttons.get("next"), g);
                     break;
 
-                case CAFE_DIALOG:
+                case STORY:
                     drawBackground("cafe", g);
+                    //drawTrajectoryDebug(g);
+                    drawAnimatedObjects(g);
 
                     if (!currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
                         Replica current = currentReplicas.get(currentReplicaIndex);
