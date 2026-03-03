@@ -29,6 +29,7 @@ public class MyImage {
         loadImage("dot", "resources/dot.png");
         loadImage("room", "resources/room.jpg");
         loadImage("contry", "resources/contry.jpg");
+        loadImage("night_cafe", "resources/night_cafe.jpg");
 
         // Персонажи
         loadImage("knurov","resources/knurov.png");
@@ -40,6 +41,10 @@ public class MyImage {
         loadImage("gavrilo","resources/gavrilo.png");
         loadImage("karandashev","resources/karandashev.png");
         loadImage("robinzon","resources/robinzon.png");
+        loadImage("bird_0","resources/bird_0.png");
+        loadImage("bird_1","resources/bird_1.png");
+        loadImage("cat_0","resources/cat_0.png");
+        loadImage("cat_1","resources/cat_1.png");
 
         // Реплики
         loadImage("replica_s", "resources/replica_s.png");
