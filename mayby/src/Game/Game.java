@@ -377,6 +377,7 @@ public class Game extends JFrame {
         }
 
         // Сброс состояния игры
+
         resetGameState();
         storyWithChoices = true; // Возвращаем режим по умолчанию
     }
