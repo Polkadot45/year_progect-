@@ -19,17 +19,21 @@ public class MyImage {
         loadImage("exit", "resources/exit.png");
         loadImage("stop", "resources/stop.png");
         loadImage("next", "resources/next.png");
-        loadImage("razvilka1", "resources/razvilka1.png");
-        loadImage("razvilka2", "resources/razvilka2.png");
+        loadImage("line_s", "resources/сhois1.png");
+        loadImage("var_s", "resources/сhois2.png");
+        loadImage("sbros", "resources/sbros.png");
+        loadImage("sbros_set", "resources/sbros_set.png");
+        loadImage("music_on", "resources/music_on.png");
+        loadImage("music_off", "resources/sbros.png");
 
         // Фоны сцен
         loadImage("people", "resources/people.jpg");
         loadImage("seti", "resources/seti.jpg");
         loadImage("cafe", "resources/cafe.jpg");
-        loadImage("dot", "resources/dot.png");
         loadImage("room", "resources/room.jpg");
         loadImage("contry", "resources/contry.jpg");
         loadImage("night_cafe", "resources/night_cafe.jpg");
+        loadImage("reset", "resources/reset.jpg");
 
         // Персонажи
         loadImage("knurov","resources/knurov.png");
