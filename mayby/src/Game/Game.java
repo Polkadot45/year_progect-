@@ -91,7 +91,10 @@ public class Game extends JFrame {
     private boolean storyWithChoices = true;
 
     private Clip backgroundMusic;
-    private boolean musicEnabled = true; // Флаг включения музыки
+    private boolean musicEnabled = true;// Флаг включения музыки
+
+    private int choicePoints = 0; // Накопленные очки выборов
+    private boolean isEndingScenario = false; // Флаг: сейчас идёт показ концовки
 
     public static class Rect {
         int x, y, w, h;
@@ -114,7 +117,10 @@ public class Game extends JFrame {
         String choiceFile2;
         String choiceText1;
         String choiceText2;
+        int choiceValue1; // Значение первого выбора
+        int choiceValue2; // Значение второго выбора
 
+        // Обычная реплика
         public DialogueLine(String text, int x, int y, String characterKey) {
             this.text = text;
             this.x = x;
@@ -123,7 +129,9 @@ public class Game extends JFrame {
             this.isChoicePoint = false;
         }
 
-        public DialogueLine(int x, int y, String text1, String file1, String text2, String file2) {
+        // Точка выбора
+        public DialogueLine(int x, int y, String text1, String file1, int value1,
+                            String text2, String file2, int value2) {
             this.text = "";
             this.x = x;
             this.y = y;
@@ -131,8 +139,10 @@ public class Game extends JFrame {
             this.isChoicePoint = true;
             this.choiceText1 = text1;
             this.choiceFile1 = file1;
+            this.choiceValue1 = value1;
             this.choiceText2 = text2;
             this.choiceFile2 = file2;
+            this.choiceValue2 = value2;
         }
     }
 
@@ -142,11 +152,17 @@ public class Game extends JFrame {
         if (inChoiceMode && choiceReplica != null) {
             Rect choice1 = replicas.get("chois1");
             if (choice1 != null && isInside(x, y, choice1)) {
+                // Накопление очков выбора
+                choicePoints += choiceReplica.choiceValue1;
+                System.out.println("✅ Выбор 1: +" + choiceReplica.choiceValue1 + " очков. Всего: " + choicePoints);
+
                 if (!"continue".equals(choiceReplica.choiceFile1)) {
                     loadScenario(choiceReplica.choiceFile1);
+                    currentReplicaIndex = 0; // начинаем с первой реплики нового сценария
                 } else {
                     currentReplicaIndex++;
                 }
+
                 inChoiceMode = false;
                 choiceReplica = null;
                 return;
@@ -154,11 +170,17 @@ public class Game extends JFrame {
 
             Rect choice2 = replicas.get("chois2");
             if (choice2 != null && isInside(x, y, choice2)) {
+                // Накопление очков выбора
+                choicePoints += choiceReplica.choiceValue2;
+                System.out.println("✅ Выбор 2: +" + choiceReplica.choiceValue2 + " очков. Всего: " + choicePoints);
+
                 if (!"continue".equals(choiceReplica.choiceFile2)) {
                     loadScenario(choiceReplica.choiceFile2);
+                    currentReplicaIndex = 0; // начинаем с первой реплики нового сценария
                 } else {
                     currentReplicaIndex++;
                 }
+
                 inChoiceMode = false;
                 choiceReplica = null;
                 return;
@@ -170,6 +192,7 @@ public class Game extends JFrame {
                 saveProgress("save_var.dat");
             }
 
+            backgroundChanges.clear();
             currentScene = Scene.MENU;
             currentReplicas.clear();
             currentReplicaIndex = 0;
@@ -228,18 +251,23 @@ public class Game extends JFrame {
 
             case INTRO:
                 if (isInside(x, y, buttons.get("next"))) {
-                    // Проверяем наличие сохранения
-                    if (hasSavedProgress("save_var.dat")) {
-                        if (loadProgress("save_var.dat")) {
-                            currentScene = Scene.STORY;
-                        } else {
-                            JOptionPane.showMessageDialog(Game.this,
-                                    "Ошибка загрузки сохранения. Начинаем новую игру.",
-                                    "Ошибка", JOptionPane.WARNING_MESSAGE);
-                            resetGameState();
-                            currentScene = Scene.MODE_SELECT;
+                    if (!currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
+                        DialogueLine current = currentReplicas.get(currentReplicaIndex);
+
+                        if (current.isChoicePoint) {
+                            inChoiceMode = true;
+                            choiceReplica = current;
+                            return;
                         }
-                    } else {
+
+                        if (currentReplicaIndex < currentReplicas.size() - 1) {
+                            currentReplicaIndex++;
+                        } else {
+                            // Конец сценария — показываем концовку
+                            showEnding();
+                        }
+                    }
+                    else{
                         currentScene = Scene.MODE_SELECT;
                     }
                 }
@@ -248,8 +276,9 @@ public class Game extends JFrame {
             case MODE_SELECT:
                 // Выбор линейной истории
                 if (isInside(x, y, buttons.get("line_s"))) {
-                    storyWithChoices = false;
                     resetGameState();
+                    storyWithChoices = false;
+                    isEndingScenario = false;
                     currentScene = Scene.STORY;
                     loadScenario("line_story.txt");
                     currentReplicaIndex = 0;
@@ -279,6 +308,7 @@ public class Game extends JFrame {
 
                 else if (isInside(x, y, buttons.get("back"))) {
                     currentScene = Scene.MENU;
+                    backgroundChanges.clear();
                 }
 
                 break;
@@ -295,13 +325,26 @@ public class Game extends JFrame {
                             return;
                         }
 
-                        if (currentReplicaIndex < currentReplicas.size() - 1) {
-                            currentReplicaIndex++;
+                        // Если это последняя реплика текущего сценария
+                        if (currentReplicaIndex == currentReplicas.size() - 1) {
+                            if (isEndingScenario) {
+                                // Концовка завершена → сбрасываем всё и возвращаемся в меню
+                                resetProgress();
+                                resetGameState();
+                                currentScene = Scene.MENU;
+                                System.out.println("✅ Концовка полностью показана. Прогресс сброшен.");
+                            } else if (storyWithChoices) {
+                                // Основной сценарий с развилками завершён → показываем концовку
+                                showEnding();
+                            } else {
+                                // Линейная история завершена → сразу в меню
+                                resetProgress();
+                                resetGameState();
+                                currentScene = Scene.MENU;
+                            }
                         } else {
-                            currentReplicas.clear();
-                            currentReplicaIndex = 0;
-                            backgroundChanges.clear();
-                            currentScene = Scene.MENU;
+                            // Обычный переход к следующей реплике
+                            currentReplicaIndex++;
                         }
                     }
                 }
@@ -313,6 +356,7 @@ public class Game extends JFrame {
         return r != null && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
     }
 
+    // Сохранение прогресса
     private void saveProgress(String filename) {
         if (currentScenarioFile == null) return;
 
@@ -321,11 +365,14 @@ public class Game extends JFrame {
             writer.write(currentReplicaIndex + "\n");
             writer.write(inChoiceMode + "\n");
             writer.write(storyWithChoices + "\n");
+            writer.write(choicePoints + "\n"); // Сохраняем очки выборов
+            System.out.println("💾 Сохранено: очки выборов = " + choicePoints);
         } catch (IOException e) {
             System.err.println("Ошибка сохранения: " + e.getMessage());
         }
     }
 
+    // Загрузка прогресса
     private boolean loadProgress(String filename) {
         File saveFile = new File(filename);
         if (!saveFile.exists()) return false;
@@ -335,11 +382,15 @@ public class Game extends JFrame {
             int index = Integer.parseInt(reader.readLine());
             boolean choiceMode = Boolean.parseBoolean(reader.readLine());
             boolean mode = Boolean.parseBoolean(reader.readLine());
+            int points = Integer.parseInt(reader.readLine()); // Загружаем очки
 
             loadScenario(file);
             currentReplicaIndex = index;
             inChoiceMode = choiceMode;
             storyWithChoices = mode;
+            choicePoints = points; // Восстанавливаем очки
+
+            System.out.println("📥 Загружено: очки выборов = " + choicePoints);
             return true;
         } catch (Exception e) {
             System.err.println("Ошибка загрузки: " + e.getMessage());
@@ -360,23 +411,15 @@ public class Game extends JFrame {
         boolean deleted = false;
         if (saveFile.exists()) {
             deleted = saveFile.delete();
-            if (deleted) {
-                System.out.println("🗑️ Файл сохранения удален: " + saveFile.getAbsolutePath());
-            } else {
-                System.err.println("❌ Не удалось удалить файл: " + saveFile.getAbsolutePath());
+            if (!deleted) {
                 // Принудительная очистка через перезапись
                 try (FileWriter writer = new FileWriter(saveFile)) {
                     writer.write(""); // Очищаем содержимое
-                    System.out.println("🗑️ Файл сохранения очищен");
                 } catch (IOException e) {
                     System.err.println("❌ Ошибка очистки файла: " + e.getMessage());
                 }
             }
-        } else {
-            System.out.println("ℹ️ Файл сохранения не найден");
         }
-
-        // Сброс состояния игры
 
         resetGameState();
         storyWithChoices = true; // Возвращаем режим по умолчанию
@@ -389,8 +432,9 @@ public class Game extends JFrame {
         inChoiceMode = false;
         choiceReplica = null;
         currentScenarioFile = null;
-        currentScene = Scene.MENU;
-        System.out.println("🔄 Состояние игры сброшено");
+        choicePoints = 0;
+        storyWithChoices = true;
+        isEndingScenario = false; //Сбрасываем флаг концовки
     }
 
     private void loadScenario(String filename) {
@@ -517,6 +561,20 @@ public class Game extends JFrame {
         }
     }
 
+    private void showEnding() {
+        int endingIndex;
+        if (choicePoints <= 2) endingIndex = 1;
+        else if (choicePoints <= 5) endingIndex = 2;
+        else if (choicePoints <= 8) endingIndex = 3;
+        else endingIndex = 4;
+
+        // Загружаем файл концовки как обычный сценарий
+        loadScenario("ending_" + endingIndex + ".txt");
+        currentReplicaIndex = 0;
+        isEndingScenario = true; // Устанавливаем флаг
+
+    }
+
     private void playBackgroundMusic() {
         if (!musicEnabled) return;
 
@@ -543,7 +601,6 @@ public class Game extends JFrame {
     private void stopMusic() {
         if (backgroundMusic != null && backgroundMusic.isRunning()) {
             backgroundMusic.stop();
-            System.out.println("🎵 Музыка остановлена");
         }
     }
 
@@ -555,7 +612,6 @@ public class Game extends JFrame {
         } else {
             stopMusic();
         }
-        System.out.println("🎵 Музыка: " + (musicEnabled ? "ВКЛ" : "ВЫКЛ"));
     }
 
     class GamePanel extends JPanel {

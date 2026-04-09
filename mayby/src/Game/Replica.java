@@ -7,6 +7,7 @@ public class Replica {
     private final Game game;
     private java.util.List<Game.DialogueLine> currentReplicas = new java.util.ArrayList<>();
     private TreeMap<Integer, String> backgroundChanges = new TreeMap<>();
+    public int endiks=0;
 
     public Replica(Game game) {
         this.game = game;
@@ -77,18 +78,16 @@ public class Replica {
     }
 
     private void parseChoiceLine(String line) {
-        if (line.startsWith("#CHOICE:")) {
-            line = "#choice:" + line.substring(8);
-        }
-
         String params = line.substring(8).trim();
         String[] parts = params.split("\\|");
-        if (parts.length == 4) {
+        if (parts.length == 6) { // Теперь 6 частей вместо 4
             String text1 = parts[0].trim();
             String file1 = parts[1].trim();
-            String text2 = parts[2].trim();
-            String file2 = parts[3].trim();
-            currentReplicas.add(new Game.DialogueLine(0, 0, text1, file1, text2, file2));
+            int value1 = Integer.parseInt(parts[2].trim()); // Значение первого выбора
+            String text2 = parts[3].trim();
+            String file2 = parts[4].trim();
+            int value2 = Integer.parseInt(parts[5].trim()); // Значение второго выбора
+            currentReplicas.add(new Game.DialogueLine(0, 0, text1, file1, value1, text2, file2, value2));
         }
     }
 
