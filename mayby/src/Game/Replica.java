@@ -2,12 +2,12 @@ package Game;
 
 import java.io.*;
 import java.util.*;
+import java.awt.FontMetrics;
 
 public class Replica {
     private final Game game;
     private java.util.List<Game.DialogueLine> currentReplicas = new java.util.ArrayList<>();
     private TreeMap<Integer, String> backgroundChanges = new TreeMap<>();
-    public int endiks=0;
 
     public Replica(Game game) {
         this.game = game;
@@ -77,6 +77,46 @@ public class Replica {
         }
     }
 
+    public static java.util.List<String> wrapText(String text, FontMetrics fm, int maxWidth) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        if (words.length == 0) return lines;
+
+        StringBuilder currentLine = new StringBuilder();
+        for (String word : words) {
+            if (fm.stringWidth(word) > maxWidth) {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder();
+                }
+                StringBuilder chunk = new StringBuilder();
+                for (char c : word.toCharArray()) {
+                    String test = chunk.toString() + c;
+                    if (fm.stringWidth(test) > maxWidth && chunk.length() > 0) {
+                        lines.add(chunk.toString());
+                        chunk = new StringBuilder(String.valueOf(c));
+                    } else {
+                        chunk.append(c);
+                    }
+                }
+                if (chunk.length() > 0) currentLine.append(chunk);
+                continue;
+            }
+
+            String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
+            if (fm.stringWidth(testLine) > maxWidth && currentLine.length() > 0) {
+                lines.add(currentLine.toString());
+                currentLine = new StringBuilder(word);
+            } else {
+                if (currentLine.length() > 0) currentLine.append(" ");
+                currentLine.append(word);
+            }
+        }
+
+        if (currentLine.length() > 0) lines.add(currentLine.toString());
+        return lines;
+    }
+
     private void parseChoiceLine(String line) {
         String params = line.substring(8).trim();
         String[] parts = params.split("\\|");
@@ -94,7 +134,7 @@ public class Replica {
     private void parseBackgroundChange(String line) {
         String normalized = line.toLowerCase().replace(" ", "");
         if (!normalized.startsWith("#bg:")) {
-            System.err.println("❌ Ошибка: строка не распознана как #bg: " + line);
+            System.err.println("Ошибка: строка не распознана как #bg: " + line);
             return;
         }
         String bgKey = normalized.substring(4).trim();
@@ -109,6 +149,7 @@ public class Replica {
     public TreeMap<Integer, String> getBackgroundChanges() {
         return backgroundChanges;
     }
+
 
     public void clear() {
         currentReplicas.clear();

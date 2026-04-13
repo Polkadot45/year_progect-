@@ -34,12 +34,15 @@ public class MyImage {
         loadImage("contry", "resources/contry.jpg");
         loadImage("night_cafe", "resources/night_cafe.jpg");
         loadImage("reset", "resources/reset.jpg");
+        loadImage("end_knyrov", "resources/end_knyrov.jpg");
+        loadImage("end_karandash", "resources/end_karandash.jpg");
 
         // Персонажи
         loadImage("knurov","resources/knurov.png");
         loadImage("serega","resources/serega.png");
         loadImage("ivan", "resources/ivan.png");
         loadImage("larusaS", "resources/larusaS.png");
+        loadImage("larusaC", "resources/larusaC.png");
         loadImage("paratov", "resources/paratov.png");
         loadImage("mama", "resources/mama.png");
         loadImage("gavrilo","resources/gavrilo.png");

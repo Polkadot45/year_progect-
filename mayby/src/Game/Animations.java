@@ -13,8 +13,15 @@ public class Animations {
     private Timer animationTimer;
     private boolean animationsEnabled = true;
     private String currentScenarioFile;
+    private int currentReplicaIndex = 0;
+    private int totalReplicas = 0;
 
     private final Map<String, List<String>> scenarioAllowedObjects = new HashMap<>();
+
+    public void updateProgress(int currentIndex, int totalCount) {
+        this.currentReplicaIndex = currentIndex;
+        this.totalReplicas = totalCount;
+    }
 
     public Animations(Game game, MyImage imageManager) {
         this.game = game;
@@ -52,19 +59,36 @@ public class Animations {
 
         animatedObjects.removeIf(obj -> !obj.update());
 
-        double spawnChance = 0.0;
-        if ("1_1.txt".equals(currentScenarioFile) || "1_2.txt".equals(currentScenarioFile) || "1_3.txt".equals(currentScenarioFile)) {
-            spawnChance = 0.007;
-        } else {
-            spawnChance = 0.002;
+        int remaining = totalReplicas - currentReplicaIndex; // Сколько реплик осталось
+        boolean shouldSpawnBird = false;
+        boolean shouldSpawnCat = false;
+
+        // Птица: только в 1_1.txt, 1_2.txt, 1_3.txt и если осталось ≥10 реплик
+        if (("1_1.txt".equals(currentScenarioFile) ||
+                "1_2.txt".equals(currentScenarioFile) ||
+                "1_3.txt".equals(currentScenarioFile)) && remaining >= 10) {
+            shouldSpawnBird = true;
         }
 
-        if (Math.random() < spawnChance) {
-            if (animatedObjects.size() < 2 && ("1_1.txt".equals(currentScenarioFile) || "1_2.txt".equals(currentScenarioFile) || "1_3.txt".equals(currentScenarioFile))) {
-                spawnRandomObject();
-            } else if (animatedObjects.isEmpty()) {
-                spawnRandomObject();
-            }
+        // Кошка: только в 1_4.txt, 1_5.txt и если осталось ≥13 реплик
+        if (("1_4.txt".equals(currentScenarioFile) ||
+                "1_5.txt".equals(currentScenarioFile)) && remaining >= 13) {
+            shouldSpawnCat = true;
+        }
+
+        double spawnChance = 0.0;
+        boolean canSpawn = false;
+
+        if (shouldSpawnBird) {
+            spawnChance = 0.007;
+            canSpawn = animatedObjects.size() < 2;
+        } else if (shouldSpawnCat) {
+            spawnChance = 0.003;
+            canSpawn = animatedObjects.isEmpty();
+        }
+
+        if (canSpawn && Math.random() < spawnChance) {
+            spawnRandomObject();
         }
 
         game.repaintPanel();

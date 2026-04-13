@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import java.awt.image.BufferedImage;
 import javax.sound.sampled.*;
 import java.io.File;
+import java.awt.FontMetrics;
 
 public class Game extends JFrame {
 
@@ -63,11 +64,6 @@ public class Game extends JFrame {
     enum Scene {
         MENU, SETTINGS, INTRO, STORY, MODE_SELECT, RESET_SCREEN,
     }
-
-
-    //доделать презу, проверить презинтацию,все ли подпрограммы и в таблице классы есть
-    //музыка,настройки,заменить грустную ларису на веселую,робинзон в конце поменять
-    //выбор основа или с развилками
 
     private final Map<String, Rect> buttons = new HashMap<>();
     private final Map<String, Rect> backgrounds = new HashMap<>();
@@ -154,7 +150,6 @@ public class Game extends JFrame {
             if (choice1 != null && isInside(x, y, choice1)) {
                 // Накопление очков выбора
                 choicePoints += choiceReplica.choiceValue1;
-                System.out.println("✅ Выбор 1: +" + choiceReplica.choiceValue1 + " очков. Всего: " + choicePoints);
 
                 if (!"continue".equals(choiceReplica.choiceFile1)) {
                     loadScenario(choiceReplica.choiceFile1);
@@ -172,7 +167,6 @@ public class Game extends JFrame {
             if (choice2 != null && isInside(x, y, choice2)) {
                 // Накопление очков выбора
                 choicePoints += choiceReplica.choiceValue2;
-                System.out.println("✅ Выбор 2: +" + choiceReplica.choiceValue2 + " очков. Всего: " + choicePoints);
 
                 if (!"continue".equals(choiceReplica.choiceFile2)) {
                     loadScenario(choiceReplica.choiceFile2);
@@ -332,7 +326,6 @@ public class Game extends JFrame {
                                 resetProgress();
                                 resetGameState();
                                 currentScene = Scene.MENU;
-                                System.out.println("✅ Концовка полностью показана. Прогресс сброшен.");
                             } else if (storyWithChoices) {
                                 // Основной сценарий с развилками завершён → показываем концовку
                                 showEnding();
@@ -366,7 +359,6 @@ public class Game extends JFrame {
             writer.write(inChoiceMode + "\n");
             writer.write(storyWithChoices + "\n");
             writer.write(choicePoints + "\n"); // Сохраняем очки выборов
-            System.out.println("💾 Сохранено: очки выборов = " + choicePoints);
         } catch (IOException e) {
             System.err.println("Ошибка сохранения: " + e.getMessage());
         }
@@ -390,7 +382,6 @@ public class Game extends JFrame {
             storyWithChoices = mode;
             choicePoints = points; // Восстанавливаем очки
 
-            System.out.println("📥 Загружено: очки выборов = " + choicePoints);
             return true;
         } catch (Exception e) {
             System.err.println("Ошибка загрузки: " + e.getMessage());
@@ -416,7 +407,7 @@ public class Game extends JFrame {
                 try (FileWriter writer = new FileWriter(saveFile)) {
                     writer.write(""); // Очищаем содержимое
                 } catch (IOException e) {
-                    System.err.println("❌ Ошибка очистки файла: " + e.getMessage());
+                    System.err.println("Ошибка очистки файла: " + e.getMessage());
                 }
             }
         }
@@ -483,7 +474,7 @@ public class Game extends JFrame {
                 continue;
             }
 
-            java.util.List<String> lines = wrapText(paragraph, fm, maxWidth);
+            java.util.List<String> lines = Replica.wrapText(paragraph, fm, maxWidth);
             for (String line : lines) {
                 int textX = replica.x + leftPadding;
                 g2d.drawString(line, textX, currentY);
@@ -494,45 +485,6 @@ public class Game extends JFrame {
         g2d.dispose();
     }
 
-    private java.util.List<String> wrapText(String text, FontMetrics fm, int maxWidth) {
-        java.util.List<String> lines = new java.util.ArrayList<>();
-        String[] words = text.split(" ");
-        if (words.length == 0) return lines;
-
-        StringBuilder currentLine = new StringBuilder();
-        for (String word : words) {
-            if (fm.stringWidth(word) > maxWidth) {
-                if (currentLine.length() > 0) {
-                    lines.add(currentLine.toString());
-                    currentLine = new StringBuilder();
-                }
-                StringBuilder chunk = new StringBuilder();
-                for (char c : word.toCharArray()) {
-                    String test = chunk.toString() + c;
-                    if (fm.stringWidth(test) > maxWidth && chunk.length() > 0) {
-                        lines.add(chunk.toString());
-                        chunk = new StringBuilder(String.valueOf(c));
-                    } else {
-                        chunk.append(c);
-                    }
-                }
-                if (chunk.length() > 0) currentLine.append(chunk);
-                continue;
-            }
-
-            String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
-            if (fm.stringWidth(testLine) > maxWidth && currentLine.length() > 0) {
-                lines.add(currentLine.toString());
-                currentLine = new StringBuilder(word);
-            } else {
-                if (currentLine.length() > 0) currentLine.append(" ");
-                currentLine.append(word);
-            }
-        }
-
-        if (currentLine.length() > 0) lines.add(currentLine.toString());
-        return lines;
-    }
 
     private void drawChoiceText(Graphics g, String text, int x, int y, int maxWidth) {
         Graphics2D g2d = (Graphics2D) g.create();
@@ -543,7 +495,7 @@ public class Game extends JFrame {
 
         FontMetrics fm = g2d.getFontMetrics();
         int lineHeight = fm.getHeight();
-        java.util.List<String> lines = wrapText(text, fm, maxWidth);
+        java.util.List<String> lines = Replica.wrapText(text, fm, maxWidth);
         int currentY = y + 20;
         int leftPadding = 25;
 
@@ -563,9 +515,9 @@ public class Game extends JFrame {
 
     private void showEnding() {
         int endingIndex;
-        if (choicePoints <= 2) endingIndex = 1;
-        else if (choicePoints <= 5) endingIndex = 2;
-        else if (choicePoints <= 8) endingIndex = 3;
+        if (choicePoints <= 1) endingIndex = 1;
+        else if (choicePoints <= 3) endingIndex = 2;
+        else if (choicePoints <= 5) endingIndex = 3;
         else endingIndex = 4;
 
         // Загружаем файл концовки как обычный сценарий
@@ -581,7 +533,7 @@ public class Game extends JFrame {
         try {
             File musicFile = new File("C:/Users/User/IdeaProjects/year_progect-/mayby/src/resources/background.wav");
             if (!musicFile.exists()) {
-                System.err.println("🎵 Файл музыки не найден: " + musicFile.getAbsolutePath());
+                System.err.println("Файл музыки не найден: " + musicFile.getAbsolutePath());
                 return;
             }
 
@@ -591,9 +543,8 @@ public class Game extends JFrame {
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY); // Зациклить музыку
             backgroundMusic.start();
 
-            System.out.println("🎵 Фоновая музыка запущена");
         } catch (Exception e) {
-            System.err.println("❌ Ошибка воспроизведения музыки: " + e.getMessage());
+            System.err.println("Ошибка воспроизведения музыки: " + e.getMessage());
         }
     }
 
@@ -670,7 +621,8 @@ public class Game extends JFrame {
 
                 case STORY:
                     drawBackground("cafe", g);
-                    animations.drawAnimatedObjects(g); // Используем менеджер анимаций
+                    animations.updateProgress(currentReplicaIndex, currentReplicas.size());
+                    animations.drawAnimatedObjects(g);
 
                     if (!currentReplicas.isEmpty() && currentReplicaIndex < currentReplicas.size()) {
                         DialogueLine current = currentReplicas.get(currentReplicaIndex);
