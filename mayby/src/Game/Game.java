@@ -181,7 +181,7 @@ public class Game extends JFrame {
             }
         }
 
-        if (isInside(x, y, buttons.get("back"))) {
+        if (x>=1800 && x<=1880 && y>=42 && y<=142) {
             if (currentScene == Scene.STORY && currentScenarioFile != null) {
                 saveProgress("save_var.dat");
             }
@@ -232,7 +232,7 @@ public class Game extends JFrame {
                     resetProgress();
                     currentScene = Scene.RESET_SCREEN;
                 }
-                if (isInside(x, y, buttons.get("music"))) {
+                if (x>=733 && x<=793 && y>=384 && y<=424) {
                     toggleMusic();
                 }
                 break;
@@ -531,13 +531,15 @@ public class Game extends JFrame {
         if (!musicEnabled) return;
 
         try {
-            File musicFile = new File("C:/Users/User/IdeaProjects/year_progect-/mayby/src/resources/background.wav");
-            if (!musicFile.exists()) {
-                System.err.println("Файл музыки не найден: " + musicFile.getAbsolutePath());
+            InputStream audioSrc = getClass().getResourceAsStream("/resources/background.wav");
+            if (audioSrc == null) {
+                System.err.println("Ресурс не найден");
                 return;
             }
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(musicFile);
+            BufferedInputStream bufferedIn = new BufferedInputStream(audioSrc);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioStream);
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY); // Зациклить музыку
@@ -545,6 +547,7 @@ public class Game extends JFrame {
 
         } catch (Exception e) {
             System.err.println("Ошибка воспроизведения музыки: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -712,5 +715,7 @@ public class Game extends JFrame {
             BufferedImage img = imageManager.getImage(imgKey);
             g.drawImage(img, r.x, r.y, r.w, r.h, null);
         }
+
+
     }
 }

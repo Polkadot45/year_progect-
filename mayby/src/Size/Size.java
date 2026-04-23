@@ -26,13 +26,13 @@ public class Size {
         buttons.put("start", new Game.Rect("start", 815, 652, 245, 205));
         buttons.put("set", new Game.Rect("set", 565, 875, 250, 109));
         buttons.put("exit", new Game.Rect("exit", 1050, 882, 190, 109));
-        buttons.put("back", new Game.Rect("stop", 1800, 30, 70, 70));
+        buttons.put("back", new Game.Rect("stop", 1800, 30, 80, 80));
         buttons.put("next", new Game.Rect("next", 1660, 900,240 , 150));
         buttons.put("choice1", new Game.Rect("razvilka1", 500, 860, 387, 119));
         buttons.put("choice2", new Game.Rect("razvilka2", 950, 860, 387, 119));
         buttons.put("line_s", new Game.Rect("line_s", 400, 400, 500, 150));
         buttons.put("var_s", new Game.Rect("var_s", 1020, 400, 500, 150));
-        buttons.put("sbros", new Game.Rect("sbros", 735, 417, 80, 80));
+        buttons.put("sbros", new Game.Rect("sbros", 735, 450, 60, 43)); //set_reset
         buttons.put("sbros_set", new Game.Rect("sbros_set", 835, 570, 270, 70));
         buttons.put("music", new Game.Rect("music", 733, 340, 60, 60));
 
